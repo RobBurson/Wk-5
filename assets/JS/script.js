@@ -1,120 +1,124 @@
-function setToday() {
+var settings = {
+  debug: false,
+};
 
-    // Get Current Month/Day/Year and Hour/Minute/Second in a favorable format and display it
-    $("#currentDay").text(moment().format('MMMM Do YYYY, h:mm:ss a'));
+function setToday() {
+  // Get Current Month/Day/Year and Hour/Minute/Second in a favorable format and display it
+  $("#currentDay").text(moment().format("MMMM Do YYYY, h:mm:ss a"));
 }
 
 function setSaveButtons() {
+  if (settings.debug) {
+    console.log("setSaveButtons called");
+  }
 
-    // if i replaces the numbers, i is out of scope and id will return as undefined
-
-    $("#saveItem0").on("click", () => {
-        saveField(0);
+  for (var i = 0; i < 9; i++) {
+    $(`#saveItem${i}`).click((e) => {
+      if (settings.debug) {
+        console.log("e", e);
+      }
+      var id = e.target.id;
+      if (settings.debug) {
+        console.log(`${id} clicked`);
+      }
+      id = id.replace("saveItem", "");
+      saveField(+id);
     });
-
-    $("#saveItem1").on("click", () => {
-        saveField(1);
-    });
-
-    $("#saveItem2").on("click", () => {
-        saveField(2);
-    });
-
-    $("#saveItem3").on("click", () => {
-        saveField(3);
-    });
-
-    $("#saveItem4").on("click", () => {
-        saveField(4);
-    });
-
-    $("#saveItem5").on("click", () => {
-        saveField(5);
-    });
-
-    $("#saveItem6").on("click", () => {
-        saveField(6);
-    });
-
-    $("#saveItem7").on("click", () => {
-        saveField(7);
-    });
-
-    $("#saveItem8").on("click", () => {
-        saveField(8);
-    });
+  }
 }
 
 // save each event text to local storage via array
 
 function saveField(id) {
+  if (settings.debug) {
+    console.log("saveField called", id);
+  }
 
-    var currentSched = JSON.parse(localStorage.getItem("sched"));
+  var currentSched = JSON.parse(localStorage.getItem("events"));
+  if (settings.debug) {
+    console.log("currentSched", currentSched);
+  }
 
-    var textField = $(`#input${id}`).val();
+  var textField = $(`#input${id}`).val();
+  if (settings.debug) {
+    console.log("textField", textField);
+  }
 
-    currentSched[id] = textField;
+  currentSched[id] = textField;
 
-    localStorage.setItem("events", JSON.stringify(currentSched));
+  var stringCal = JSON.stringify(currentSched);
+  if (settings.debug) {
+    console.log(" Stringcal ", stringCal);
+  }
+
+  localStorage.setItem("events", stringCal);
 }
 
 //Set up Local Storage
 function setLocalStorage() {
-    //get array of events
-    var events = JSON.parse(localStorage.getItem("events"));
+  //get array of events
+  var calEvents = JSON.parse(localStorage.getItem("events"));
 
-    //if there is no calendar yet, create and return a new one
-    if (!calEvents) {
-        localStorage.setItem("events", JSON.stringify([]));
-        return;
-    }
-    
-    //Set saved events to populate in the calendar
-for (var i = 0; i < 9; i++) {
-    var textEl = $(`#input$[i]`);
+  //if there is no calendar yet, create and return a new one
+  if (!calEvents) {
+    localStorage.setItem("events", JSON.stringify([]));
+    return;
+  }
+
+  //Set saved events to populate in the calendar
+  for (var i = 0; i < 9; i++) {
+    var textEl = $(`#input${i}`);
     if (calEvents[i]) {
-        textEl.val(calEvents[i]);
-        } 
+      textEl.val(calEvents[i]);
     }
+  }
 }
 
 //Set BG Colors on calendar events based on current day/time
 function colors() {
+  //current value of 24 hour clock
+  var currently = +(moment().format("H"));
+  if (settings.debug) {
+    console.log("currently", currently);
+}
+  //set elements
+  for (var i = 0; i < 9; i++) {
+    //get time to set color
+    var hour = $(`#input${i}`);
 
-    //current value of 24 hour clock
-    var currently = moment().format("H");
-
-    //set elements
-    for (var i = 0; i < 9; i++) {
-
-        //get time to set color
-        var hour = $(`input${i}`);
-
-        // use data attr to get 24 hour value of each time block
-        var curHour = hour.attr("data-hour");
-
-        //set color based on past, current or future
-        if (currently > curHour) {
-            hour.addClass("past");
-        } else if (currently < curHour) {
-            hour.addClass("future");
-        } else if (currently == curHour) {
-            hour.addClass("present");
-        }
+    // use data attr to get 24 hour value of each time block
+    var curHour = +(hour.attr("data-hour"));
+    if (settings.debug) {
+        console.log("curHour", curHour);
     }
+
+    //set color based on past, current or future
+    if (currently > curHour) {
+      hour.addClass("past");
+    } else if (currently < curHour) {
+      hour.addClass("future");
+    } else if (currently == curHour) {
+      hour.addClass("present");
+    }
+  }
 }
 
 //Run Application
 function run() {
+  //Show Date
+  setToday();
 
-    //Show Date
-    setToday();
+  //Create Button Events
+  setSaveButtons();
 
-    //Create Button Events
-    setSaveButtons();
+  //Access Local Storage to populate fields with saved events
+  setLocalStorage();
 
-    //Access Local Storage to populate fields with saved events
-    saveField();
+  colors();
+
+  setInterval(() => {
+     colors(); 
+  }, 60000);
 }
 
-run ();
+run();
